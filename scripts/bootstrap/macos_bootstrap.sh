@@ -7,6 +7,9 @@ export XDG_CONFIG_HOME="$HOME/.config"
 export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
 export TRUSTED_GPGKEY_FINGREPRINT="77D8616541A323FF03E6639947BEA857F03AFE90"
 export pinentry-program="/opt/homebrew/bin/pinentry-mac"
+export GIT_HIGHLANDER="https://raw.githubusercontent.com/mkearns87/dotfiles/init/scripts/bootstrap/highlander.asc"
+export TEMP_HIGHLANDER="/tmp/highlander.asc"
+export WORKING_HIGHLANDER="/tmp/highlander.sh"
 
 # OS Name
 OS_NAME="$(uname)"
@@ -86,11 +89,33 @@ decrypt_files() {
   fi
 }
 
+curl_highlander () {
+  if [[ ! -f $TEMP_HIGHLANDER ]]; then
+  echo "Obtaining highlander file."
+  /usr/bin/curl -o $TEMP_HIGHLANDER $GIT_HIGHLANDER
+  else
+    echo "file already present."
+  fi
+}
+
+there_can_be_only_one () {
+  print_with_color $RED "THERE CAN BE ONLY ONE!!!"
+  print_with_color $GREEN "DON'T FORGET TO TOUCH YUBIKEY!"
+  gpg --decrypt $TEMP_HIGHLANDER > $WORKING_HIGHLANDER
+  chmod +x $WORKING_HIGHLANDER
+  echo "Running highlander script."
+  $WORKING_HIGHLANDER
+}
+
 install_homebrew
 bootstrap_brew_env
 setup_gnupg
 link-ssh-auth-sock
-chezmoi init https://github.com/mkearns87/dotfiles.git --apply
+curl_highlander
+there_can_be_only_one
+
+
+# chezmoi init https://github.com/mkearns87/dotfiles.git --apply
 
 # to do for private
 # have chezmoi clone down encyrpted versions of cpe config and aws-okta; then
