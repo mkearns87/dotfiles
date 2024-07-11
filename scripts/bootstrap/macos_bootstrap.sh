@@ -6,12 +6,15 @@
 export XDG_CONFIG_HOME="$HOME/.config"
 export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
 export TRUSTED_GPGKEY_FINGREPRINT="77D8616541A323FF03E6639947BEA857F03AFE90"
-export pinentry-program="/opt/homebrew/bin/pinentry-mac"
+export pinentry_program="/opt/homebrew/bin/pinentry-mac"
 export GIT_HIGHLANDER="https://raw.githubusercontent.com/mkearns87/dotfiles/init/scripts/bootstrap/highlander.asc"
 export TEMP_HIGHLANDER="/tmp/highlander.asc"
 export WORKING_HIGHLANDER="/tmp/highlander.sh"
 export TEMP_PUBKEY="/tmp/pubkey.asc"
 export GIT_PUBKEY="https://raw.githubusercontent.com/mkearns87/dotfiles/init/scripts/bootstrap/77D8616541A323FF03E6639947BEA857F03AFE90.asc"
+export OS_VERSION_CHECK=$(echo "$os_version" | awk -F. '{print $1}')
+export TOUCH_ID_TEMPLATE_FILE="/etc/pam.d/sudo_local.template"
+export TOUCH_ID_AUTH_FILE="/etc/pam.d/sudo_local"
 
 # OS Name
 OS_NAME="$(uname)"
@@ -90,15 +93,16 @@ else
 fi
 }
 
-decrypt_files() {
-  gitattributes_file="$PWD/.gitattributes"
-  [[ ! -f "$gitattributes_file" ]] && return
-  if grep "git-crypt" "$gitattributes_file" &>/dev/null; then
-    git-crypt unlock || (
-      print_error "Error: Could not decrypt files"
-      exit 1
-    )
-  fi
+touch_id_sudo() {
+    if [[ ! -f "$TOUCH_ID_AUTH_FILE" ]]; then
+        echo "Setting up Touch ID for sudo, you might need to authenticate"
+        sudo /bin/cp "$TOUCH_ID_TEMPLATE_FILE" "$TOUCH_ID_AUTH_FILE"
+        sudo sed -i '' -e 's,#auth       sufficient     pam_tid.so,auth       sufficient     pam_tid.so,g' "$TOUCH_ID_AUTH_FILE"
+        sudo /usr/sbin/chown root:wheel "$TOUCH_ID_AUTH_FILE"
+        sudo /bin/chmod 555 "$TOUCH_ID_AUTH_FILE"
+    else
+        echo "$TOUCH_ID_AUTH_FILE already exists."
+    fi
 }
 
 curl_highlander () {
@@ -121,6 +125,7 @@ there_can_be_only_one () {
 
 install_homebrew
 bootstrap_brew_env
+touch_id_sudo
 curl_pubkey
 setup_gnupg
 link-ssh-auth-sock
