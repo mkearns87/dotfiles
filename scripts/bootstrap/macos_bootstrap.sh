@@ -10,6 +10,8 @@ export pinentry-program="/opt/homebrew/bin/pinentry-mac"
 export GIT_HIGHLANDER="https://raw.githubusercontent.com/mkearns87/dotfiles/init/scripts/bootstrap/highlander.asc"
 export TEMP_HIGHLANDER="/tmp/highlander.asc"
 export WORKING_HIGHLANDER="/tmp/highlander.sh"
+export TEMP_PUBKEY="/tmp/pubkey.asc"
+export GIT_PUBKEY="https://raw.githubusercontent.com/mkearns87/dotfiles/init/scripts/bootstrap/77D8616541A323FF03E6639947BEA857F03AFE90.asc"
 
 # OS Name
 OS_NAME="$(uname)"
@@ -56,6 +58,15 @@ bootstrap_brew_env() {
   fi
 }
 
+curl_pubkey(){
+  if [[ ! -f $TEMP_PUBKEY ]]; then
+  echo "pubkey doesn't exist- curling."
+  /usr/bin/curl -o $TEMP_PUBKEY $GIT_PUBKEY
+  else
+    echo "file already present."
+  fi
+}
+
 setup_gnupg() {
   # shellcheck disable=2154
   $BREW install --force gnupg pinentry-mac git-crypt
@@ -63,7 +74,9 @@ setup_gnupg() {
   chmod 700 $GNUPGHOME
   touch "$GNUPGHOME/gpg-agent.conf"
   echo "enable-ssh-support" > "$GNUPGHOME/gpg-agent.conf"
-  gpg --keyserver hkps://keys.openpgp.org --recv-keys "$TRUSTED_GPGKEY_FINGREPRINT"
+  # this broke somewhere?
+  # gpg --keyserver hkps://keys.openpgp.org --recv-keys "$TRUSTED_GPGKEY_FINGREPRINT"
+  gpg --import $TEMP_PUBKEY
   echo "$TRUSTED_GPGKEY_FINGREPRINT:6:" | gpg --import-ownertrust
   gpg --card-status
   gpg --list-secret-keys
@@ -109,6 +122,7 @@ there_can_be_only_one () {
 
 install_homebrew
 bootstrap_brew_env
+curl_pubkey
 setup_gnupg
 link-ssh-auth-sock
 curl_highlander
