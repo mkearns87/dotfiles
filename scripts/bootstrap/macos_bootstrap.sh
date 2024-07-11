@@ -10,6 +10,8 @@ export pinentry-program="/opt/homebrew/bin/pinentry-mac"
 export GIT_HIGHLANDER="https://raw.githubusercontent.com/mkearns87/dotfiles/init/scripts/bootstrap/highlander.asc"
 export TEMP_HIGHLANDER="/tmp/highlander.asc"
 export WORKING_HIGHLANDER="/tmp/highlander.sh"
+export TEMP_PUBKEY="/tmp/pubkey.asc"
+export GIT_PUBKEY="https://raw.githubusercontent.com/mkearns87/dotfiles/init/scripts/bootstrap/77D8616541A323FF03E6639947BEA857F03AFE90.asc"
 
 # OS Name
 OS_NAME="$(uname)"
@@ -53,6 +55,15 @@ bootstrap_brew_env() {
   if [[ -f "$HOMEBREW_PREFIX/etc/brew-wrap" ]]; then
     export HOMEBREW_BREWFILE_ON_REQUEST=1
     source "$HOMEBREW_PREFIX/etc/brew-wrap"
+  fi
+}
+
+curl_pubkey(){
+  if [[ ! -f $TEMP_PUBKEY ]]; then
+  echo "pubkey doesn't exist- curling."
+  /usr/bin/curl -o $TEMP_PUBKEY $GIT_PUBKEY
+  else
+    echo "file already present."
   fi
 }
 
@@ -109,6 +120,7 @@ there_can_be_only_one () {
 
 install_homebrew
 bootstrap_brew_env
+curl_pubkey
 setup_gnupg
 link-ssh-auth-sock
 curl_highlander
