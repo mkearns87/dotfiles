@@ -63,7 +63,7 @@ setup_gnupg() {
   chmod 700 $GNUPGHOME
   touch "$GNUPGHOME/gpg-agent.conf"
   echo "enable-ssh-support" > "$GNUPGHOME/gpg-agent.conf"
-  gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys "$TRUSTED_GPGKEY_FINGREPRINT"
+  gpg --keyserver hkps://keys.openpgp.org --recv-keys "$TRUSTED_GPGKEY_FINGREPRINT"
   echo "$TRUSTED_GPGKEY_FINGREPRINT:6:" | gpg --import-ownertrust
   gpg --card-status
   gpg --list-secret-keys
