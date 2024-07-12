@@ -88,6 +88,8 @@ link-ssh-auth-sock() {
 if [[ -S $GNUPGHOME/S.gpg-agent.ssh ]]; then
   print_message "gpg-agent present, linking ssh listener."
   /bin/ln -sf $GNUPGHOME/S.gpg-agent.ssh $SSH_AUTH_SOCK
+  print_message "restarting gpg agent to reflect changes"
+  gpg-connect-agent updatestartuptty /bye
 else
   print_error "Error: missing gpg-agent"
 fi
