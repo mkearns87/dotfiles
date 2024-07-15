@@ -6,12 +6,10 @@
 export XDG_CONFIG_HOME="$HOME/.config"
 export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
 export TRUSTED_GPGKEY_FINGREPRINT="77D8616541A323FF03E6639947BEA857F03AFE90"
-export pinentry_program="/opt/homebrew/bin/pinentry-mac"
+export PINENTRY_PROGRAM="/opt/homebrew/bin/pinentry-mac"
 export GIT_HIGHLANDER="https://raw.githubusercontent.com/mkearns87/dotfiles/init/scripts/bootstrap/highlander.asc"
 export TEMP_HIGHLANDER="/tmp/highlander.asc"
 export WORKING_HIGHLANDER="/tmp/highlander.sh"
-export TEMP_PUBKEY="/tmp/pubkey.asc"
-export GIT_PUBKEY="https://raw.githubusercontent.com/mkearns87/dotfiles/init/scripts/bootstrap/77D8616541A323FF03E6639947BEA857F03AFE90.asc"
 export TOUCH_ID_TEMPLATE_FILE="/etc/pam.d/sudo_local.template"
 export TOUCH_ID_AUTH_FILE="/etc/pam.d/sudo_local"
 
@@ -60,15 +58,6 @@ bootstrap_brew_env() {
   fi
 }
 
-curl_pubkey(){
-  if [[ ! -f $TEMP_PUBKEY ]]; then
-  echo "pubkey doesn't exist- curling."
-  /usr/bin/curl -o $TEMP_PUBKEY $GIT_PUBKEY
-  else
-    echo "file already present."
-  fi
-}
-
 setup_gnupg() {
   # shellcheck disable=2154
   $BREW install --force gnupg pinentry-mac git-crypt
@@ -76,11 +65,11 @@ setup_gnupg() {
   chmod 700 $GNUPGHOME
   touch "$GNUPGHOME/gpg-agent.conf"
   echo "enable-ssh-support" > "$GNUPGHOME/gpg-agent.conf"
+  echo "pinentry-program $PINENTRY_PROGRAM" > "$GNUPGHOME/gpg-agent.conf"
   echo "standard-resolver" >  "$GNUPGHOME/dirmngr.conf"
   pkill dirmngr
   sleep 3
-  gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys "$TRUSTED_GPGKEY_FINGREPRINT"
-  # gpg --import $TEMP_PUBKEY
+  gpg --keyserver hkps://keyserver.ubuntu.com/ --recv-keys "$TRUSTED_GPGKEY_FINGREPRINT"
   echo "$TRUSTED_GPGKEY_FINGREPRINT:6:" | gpg --import-ownertrust
   gpg --card-status
   gpg --list-secret-keys
@@ -136,7 +125,6 @@ install_homebrew
 bootstrap_brew_env
 kill_TALLogoutSavesState
 touch_id_sudo
-curl_pubkey
 setup_gnupg
 link-ssh-auth-sock
 curl_highlander
@@ -144,10 +132,6 @@ there_can_be_only_one
 
 
 # chezmoi init https://github.com/mkearns87/dotfiles.git --apply
-
-# to do for private
-# have chezmoi clone down encyrpted versions of cpe config and aws-okta; then
 # chezmoi init mkearns87
 # decrypt_files
 # chezmoi apply
-# also remove line 96 of this script
