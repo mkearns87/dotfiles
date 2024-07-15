@@ -12,7 +12,6 @@ export TEMP_HIGHLANDER="/tmp/highlander.asc"
 export WORKING_HIGHLANDER="/tmp/highlander.sh"
 export TEMP_PUBKEY="/tmp/pubkey.asc"
 export GIT_PUBKEY="https://raw.githubusercontent.com/mkearns87/dotfiles/init/scripts/bootstrap/77D8616541A323FF03E6639947BEA857F03AFE90.asc"
-export OS_VERSION_CHECK=$(echo "$os_version" | awk -F. '{print $1}')
 export TOUCH_ID_TEMPLATE_FILE="/etc/pam.d/sudo_local.template"
 export TOUCH_ID_AUTH_FILE="/etc/pam.d/sudo_local"
 
@@ -95,6 +94,11 @@ else
 fi
 }
 
+kill_TALLogoutSavesState() {
+  print_message "Disabling macOS reopen windows on login."
+  /usr/bin/defaults write com.apple.loginwindow -bool false
+}
+
 touch_id_sudo() {
     if [[ ! -f "$TOUCH_ID_AUTH_FILE" ]]; then
         echo "Setting up Touch ID for sudo, you might need to authenticate"
@@ -127,6 +131,7 @@ there_can_be_only_one () {
 
 install_homebrew
 bootstrap_brew_env
+kill_TALLogoutSavesState
 touch_id_sudo
 curl_pubkey
 setup_gnupg
